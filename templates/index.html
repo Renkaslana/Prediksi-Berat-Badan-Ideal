@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCheck Pro - Prediksi Obesitas AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Pass Flask data to JavaScript if available -->
+    <script>
+        window.flaskData = {
+            prediction: "{{ prediction if prediction else '' }}",
+            error: "{{ error if error else '' }}"
+        };
+    </script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'scale-in': 'scaleIn 0.4s ease-out',
+                        'shake': 'shake 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-5px)' },
+                            '75%': { transform: 'translateX(5px)' }
+                        }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+        .bmi-indicator {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .health-tip-card {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s ease-out;
+        }
+        .health-tip-card.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 font-sans">
+    <!-- Background Decorations -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-pink-400 to-red-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-green-400 to-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="relative z-10 pt-8 pb-16">
+        <div class="container mx-auto px-4 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 animate-bounce-slow">
+                <i class="fas fa-heartbeat text-white text-3xl"></i>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold gradient-text mb-4 animate-fade-in">
+                HealthCheck Pro
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed animate-slide-up">
+                Platform web kesehatan terdepan untuk analisis kesehatan komprehensif dengan teknologi prediksi obesitas yang akurat
+            </p>
+            <div class="flex justify-center mt-8 space-x-4 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium text-gray-700">Machine Learning</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium text-gray-700">Real-time Analysis</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="relative z-10 container mx-auto px-4 pb-16">
+        <div class="grid lg:grid-cols-12 gap-8">
+            <!-- Left Sidebar - Health Metrics -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- BMI Real-time Display -->
+                <div class="glass-effect rounded-3xl p-6 shadow-xl animate-scale-in">
+                    <div class="text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-2xl mb-4">
+                            <i class="fas fa-calculator text-white text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">BMI Real-time</h3>
+                        <div class="space-y-4">
+                            <div class="text-center">
+                                <div id="bmiValue" class="text-4xl font-bold text-gray-800 mb-2 transition-all duration-500">--</div>
+                                <div id="bmiCategory" class="inline-block px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 transition-all duration-500">
+                                    Masukkan Data
+                                </div>
+                            </div>
+                            <!-- BMI Progress Ring -->
+                            <div class="relative w-32 h-32 mx-auto">
+                                <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="50" stroke="#e5e7eb" stroke-width="8" fill="none"></circle>
+                                    <circle id="bmiProgressRing" cx="60" cy="60" r="50" stroke="url(#gradient)" stroke-width="8" fill="none" 
+                                            stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round" 
+                                            class="transition-all duration-1000 ease-out"></circle>
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <div class="text-xs text-gray-500">BMI</div>
+                                        <div id="bmiRingValue" class="text-lg font-bold text-gray-800">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Status Cards -->
+                <div class="space-y-4">
+                    <div id="healthStatus" class="glass-effect rounded-2xl p-4 shadow-lg opacity-0 transition-all duration-500">
+                        <div class="flex items-center space-x-3">
+                            <div id="statusIcon" class="w-10 h-10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-heart text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Status Kesehatan</div>
+                                <div id="statusText" class="font-semibold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="riskLevel" class="glass-effect rounded-2xl p-4 shadow-lg opacity-0 transition-all duration-500">
+                        <div class="flex items-center space-x-3">
+                            <div id="riskIcon" class="w-10 h-10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Tingkat Risiko</div>
+                                <div id="riskText" class="font-semibold">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ideal Weight Calculator -->
+                <div id="idealWeightCard" class="glass-effect rounded-3xl p-6 shadow-xl opacity-0 transition-all duration-500">
+                    <div class="text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-xl mb-3">
+                            <i class="fas fa-bullseye text-white"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Berat Ideal</h4>
+                        <div id="idealWeightRange" class="text-2xl font-bold gradient-text">--</div>
+                        <div class="text-sm text-gray-500 mt-1">kg</div>
+                    </div>
+                </div>
+
+                <!-- Personalized Health Tips (Based on Prediction) -->
+                <div id="personalizedHealthTips" class="glass-effect rounded-3xl p-6 shadow-xl opacity-0 transition-all duration-500">
+                    <div class="flex items-center mb-4">
+                        <div id="personalizedTipsIcon" class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mr-3">
+                            <i class="fas fa-user-md text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Tips Untuk Anda</h3>
+                    </div>
+                    <div id="personalizedTipsContainer" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
+                        <!-- Personalized tips will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Main Form -->
+            <div class="lg:col-span-6">
+                <div class="glass-effect rounded-3xl shadow-2xl overflow-hidden animate-scale-in" style="animation-delay: 0.1s;">
+                    <!-- Form Header -->
+                    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/10"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4 mx-auto backdrop-blur-sm">
+                                <i class="fas fa-user-md text-2xl"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-center mb-2">Analisis Kesehatan</h2>
+                            <p class="text-center text-blue-100">Masukkan data untuk mendapatkan prediksi yang akurat</p>
+                        </div>
+                        <!-- Decorative elements -->
+                        <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                        <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-white/5 rounded-full"></div>
+                    </div>
+
+                    <!-- Form Content -->
+                    <div class="p-8">
+                        <!-- UPDATED: Form with AJAX submission -->
+                        <form id="predictionForm" class="space-y-6">
+                            <!-- Age Input -->
+                            <div class="group">
+                                <label for="age" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-calendar-alt text-white text-sm"></i>
+                                    </div>
+                                    Usia (tahun)
+                                </label>
+                                <div class="relative">
+                                    <input type="number" name="Age" id="age" required min="1" max="120" 
+                                           class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:bg-white transition-all duration-300 text-lg font-medium placeholder-gray-400 group-hover:border-gray-300"
+                                           placeholder="Masukkan usia Anda">
+                                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <i class="fas fa-user text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Height Input -->
+                            <div class="group">
+                                <label for="height" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-ruler-vertical text-white text-sm"></i>
+                                    </div>
+                                    Tinggi Badan (meter)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="Height" id="height" required 
+                                           class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:bg-white transition-all duration-300 text-lg font-medium placeholder-gray-400 group-hover:border-gray-300"
+                                           placeholder="Contoh: 1.70">
+                                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <i class="fas fa-arrows-alt-v text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weight Input -->
+                            <div class="group">
+                                <label for="weight" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-weight text-white text-sm"></i>
+                                    </div>
+                                    Berat Badan (kg)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="Weight" id="weight" required 
+                                           class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:bg-white transition-all duration-300 text-lg font-medium placeholder-gray-400 group-hover:border-gray-300"
+                                           placeholder="Contoh: 70">
+                                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <i class="fas fa-balance-scale text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" id="submitBtn" 
+                                    class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                                <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div class="relative z-10 flex items-center justify-center space-x-3">
+                                    <i class="fas fa-brain text-xl"></i>
+                                    <span id="submitText">Mulai Prediksi</span>
+                                    <div id="loadingSpinner" class="hidden">
+                                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
+
+                        <!-- Prediction Result -->
+                        <div id="predictionResult" class="hidden mt-8 p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl animate-slide-up">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-emerald-600 font-medium mb-1">Hasil Prediksi AI</div>
+                                <div id="predictionText" class="text-2xl font-bold text-emerald-800"></div>
+                            </div>
+                        </div>
+
+                        <!-- Error Message -->
+                        <div id="errorMessage" class="hidden mt-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl animate-shake">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-red-600 font-medium mb-1">Terjadi Kesalahan</div>
+                                <div id="errorText" class="text-lg font-semibold text-red-800"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Insights & Tips -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Health Tips -->
+                <div class="glass-effect rounded-3xl p-6 shadow-xl animate-scale-in" style="animation-delay: 0.2s;">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center mr-3">
+                            <i class="fas fa-lightbulb text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Tips Kesehatan</h3>
+                    </div>
+                    <div id="healthTips" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
+                        <!-- Tips will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- BMI History -->
+                <div class="glass-effect rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center mr-3">
+                                <i class="fas fa-history text-white"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Riwayat</h3>
+                        </div>
+                        <button onclick="clearHistory()" class="text-red-500 hover:text-red-700 transition-colors">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                    <div id="bmiHistory" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                        <!-- History will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- BMI Chart -->
+                <div class="glass-effect rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-red-500 rounded-xl flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Tren BMI</h3>
+                    </div>
+                    <div class="h-48">
+                        <canvas id="bmiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Section -->
+        <div class="mt-16 glass-effect rounded-3xl p-8 shadow-xl animate-slide-up" style="animation-delay: 0.3s;">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-400 to-blue-500 rounded-2xl mb-4">
+                    <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold gradient-text mb-2">Edukasi Kesehatan</h2>
+                <p class="text-gray-600">Pahami lebih dalam tentang BMI dan kesehatan Anda</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-2xl border border-blue-200">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-arrow-down text-white"></i>
+                        </div>
+                        <h4 class="font-semibold text-blue-800 mb-2">Kurus</h4>
+                        <p class="text-2xl font-bold text-blue-600 mb-1">&lt; 18.5</p>
+                        <p class="text-sm text-blue-600">Perlu penambahan berat badan</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl border border-green-200">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                        <h4 class="font-semibold text-green-800 mb-2">Normal</h4>
+                        <p class="text-2xl font-bold text-green-600 mb-1">18.5 - 24.9</p>
+                        <p class="text-sm text-green-600">Berat badan ideal</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-50 to-orange-100 p-6 rounded-2xl border border-yellow-200">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-exclamation text-white"></i>
+                        </div>
+                        <h4 class="font-semibold text-yellow-800 mb-2">Gemuk</h4>
+                        <p class="text-2xl font-bold text-yellow-600 mb-1">25.0 - 29.9</p>
+                        <p class="text-sm text-yellow-600">Perlu penurunan berat</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-red-50 to-pink-100 p-6 rounded-2xl border border-red-200">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-exclamation-triangle text-white"></i>
+                        </div>
+                        <h4 class="font-semibold text-red-800 mb-2">Obesitas</h4>
+                        <p class="text-2xl font-bold text-red-600 mb-1">≥ 30.0</p>
+                        <p class="text-sm text-red-600">Konsultasi dokter</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-6">
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-info-circle text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-amber-800 mb-2">Penting untuk Diingat</h4>
+                        <ul class="text-amber-700 space-y-1 text-sm">
+                            <li>• BMI adalah indikator umum, bukan diagnosis medis lengkap</li>
+                            <li>• Konsultasikan dengan dokter untuk evaluasi kesehatan menyeluruh</li>
+                            <li>• Faktor seperti massa otot dan genetik juga mempengaruhi kesehatan</li>
+                            <li>• Gaya hidup sehat lebih penting daripada angka BMI semata</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Check if there's a prediction result from Flask template on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.flaskData && window.flaskData.prediction) {
+                showPredictionResult(window.flaskData.prediction);
+            }
+            if (window.flaskData && window.flaskData.error) {
+                showErrorMessage(window.flaskData.error);
+            }
+        });
+
+        // BMI Calculation Functions
+        function calculateBMI(weight, height) {
+            if (!weight || !height || weight <= 0 || height <= 0) return null;
+            return weight / (height * height);
+        }
+
+        function getBMICategory(bmi) {
+            if (bmi < 18.5) return { 
+                category: 'Kurus', 
+                color: 'text-blue-600', 
+                bgColor: 'bg-blue-100', 
+                borderColor: 'border-blue-200',
+                gradientFrom: 'from-blue-400',
+                gradientTo: 'to-blue-600'
+            };
+            if (bmi < 25) return { 
+                category: 'Normal', 
+                color: 'text-green-600', 
+                bgColor: 'bg-green-100', 
+                borderColor: 'border-green-200',
+                gradientFrom: 'from-green-400',
+                gradientTo: 'to-green-600'
+            };
+            if (bmi < 30) return { 
+                category: 'Gemuk', 
+                color: 'text-yellow-600', 
+                bgColor: 'bg-yellow-100', 
+                borderColor: 'border-yellow-200',
+                gradientFrom: 'from-yellow-400',
+                gradientTo: 'to-yellow-600'
+            };
+            return { 
+                category: 'Obesitas', 
+                color: 'text-red-600', 
+                bgColor: 'bg-red-100', 
+                borderColor: 'border-red-200',
+                gradientFrom: 'from-red-400',
+                gradientTo: 'to-red-600'
+            };
+        }
+
+        function calculateIdealWeight(height) {
+            if (!height || height <= 0) return null;
+            const minWeight = 18.5 * height * height;
+            const maxWeight = 24.9 * height * height;
+            return { min: minWeight.toFixed(1), max: maxWeight.toFixed(1) };
+        }
+
+        function updateBMIDisplay(bmi) {
+            const bmiValueEl = document.getElementById('bmiValue');
+            const bmiCategoryEl = document.getElementById('bmiCategory');
+            const bmiRingValueEl = document.getElementById('bmiRingValue');
+            const bmiProgressRing = document.getElementById('bmiProgressRing');
+
+            if (bmi) {
+                const { category, color, bgColor, borderColor } = getBMICategory(bmi);
+                
+                bmiValueEl.textContent = bmi.toFixed(1);
+                bmiValueEl.className = `text-4xl font-bold mb-2 transition-all duration-500 ${color}`;
+                
+                bmiCategoryEl.textContent = category;
+                bmiCategoryEl.className = `inline-block px-4 py-2 rounded-full text-sm font-medium transition-all duration-500 ${bgColor} ${color} border ${borderColor}`;
+                
+                bmiRingValueEl.textContent = bmi.toFixed(1);
+                
+                // Update progress ring
+                const progress = Math.min((bmi / 40) * 314, 314);
+                bmiProgressRing.style.strokeDashoffset = 314 - progress;
+                
+                // Show health status cards
+                updateHealthStatus(bmi);
+            } else {
+                bmiValueEl.textContent = '--';
+                bmiValueEl.className = 'text-4xl font-bold mb-2 transition-all duration-500 text-gray-800';
+                bmiCategoryEl.textContent = 'Masukkan Data';
+                bmiCategoryEl.className = 'inline-block px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 transition-all duration-500';
+                bmiRingValueEl.textContent = '--';
+                bmiProgressRing.style.strokeDashoffset = '314';
+                
+                // Hide health status cards
+                document.getElementById('healthStatus').style.opacity = '0';
+                document.getElementById('riskLevel').style.opacity = '0';
+            }
+        }
+
+        function updateHealthStatus(bmi) {
+            const healthStatusEl = document.getElementById('healthStatus');
+            const riskLevelEl = document.getElementById('riskLevel');
+            const statusIconEl = document.getElementById('statusIcon');
+            const statusTextEl = document.getElementById('statusText');
+            const riskIconEl = document.getElementById('riskIcon');
+            const riskTextEl = document.getElementById('riskText');
+
+            if (bmi) {
+                const { category, gradientFrom, gradientTo } = getBMICategory(bmi);
+                
+                // Health Status
+                statusIconEl.className = `w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradientFrom} ${gradientTo}`;
+                statusTextEl.textContent = category;
+                healthStatusEl.style.opacity = '1';
+
+                // Risk Level
+                let riskLevel, riskGradient;
+                if (bmi < 18.5 || bmi >= 30) {
+                    riskLevel = 'Tinggi';
+                    riskGradient = 'from-red-400 to-red-600';
+                } else if (bmi >= 25) {
+                    riskLevel = 'Sedang';
+                    riskGradient = 'from-yellow-400 to-yellow-600';
+                } else {
+                    riskLevel = 'Rendah';
+                    riskGradient = 'from-green-400 to-green-600';
+                }
+
+                riskIconEl.className = `w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${riskGradient}`;
+                riskTextEl.textContent = riskLevel;
+                riskLevelEl.style.opacity = '1';
+            }
+        }
+
+        function updateIdealWeight(height) {
+            const idealWeightCard = document.getElementById('idealWeightCard');
+            const idealWeightRange = document.getElementById('idealWeightRange');
+
+            if (height && height > 0) {
+                const ideal = calculateIdealWeight(height);
+                idealWeightRange.textContent = `${ideal.min} - ${ideal.max}`;
+                idealWeightCard.style.opacity = '1';
+            } else {
+                idealWeightCard.style.opacity = '0';
+            }
+        }
+
+        function updateHealthTips(bmi) {
+            const tipsContainer = document.getElementById('healthTips');
+            let tips = [];
+
+            if (!bmi) {
+                tips = [
+                    { icon: 'fas fa-apple-alt', text: 'Konsumsi makanan bergizi seimbang setiap hari', color: 'from-green-400 to-green-600' },
+                    { icon: 'fas fa-tint', text: 'Minum air putih minimal 8 gelas per hari', color: 'from-blue-400 to-blue-600' },
+                    { icon: 'fas fa-running', text: 'Lakukan aktivitas fisik minimal 30 menit setiap hari', color: 'from-purple-400 to-purple-600' },
+                    { icon: 'fas fa-bed', text: 'Tidur yang cukup 7-9 jam per malam', color: 'from-indigo-400 to-indigo-600' }
+                ];
+            } else if (bmi < 18.5) {
+                tips = [
+                    { icon: 'fas fa-utensils', text: 'Tingkatkan asupan kalori dengan makanan bergizi tinggi', color: 'from-blue-400 to-blue-600' },
+                    { icon: 'fas fa-dumbbell', text: 'Lakukan latihan kekuatan untuk membangun massa otot', color: 'from-purple-400 to-purple-600' },
+                    { icon: 'fas fa-user-md', text: 'Konsultasi dengan ahli gizi untuk program penambahan berat', color: 'from-green-400 to-green-600' },
+                    { icon: 'fas fa-clock', text: 'Makan dalam porsi kecil tapi sering (5-6 kali sehari)', color: 'from-orange-400 to-orange-600' }
+                ];
+            } else if (bmi >= 30) {
+                tips = [
+                    { icon: 'fas fa-apple-alt', text: 'Fokus pada makanan rendah kalori tinggi nutrisi', color: 'from-red-400 to-red-600' },
+                    { icon: 'fas fa-running', text: 'Kombinasikan cardio dan latihan kekuatan', color: 'from-pink-400 to-pink-600' },
+                    { icon: 'fas fa-chart-line', text: 'Pantau asupan kalori harian dengan aplikasi', color: 'from-purple-400 to-purple-600' },
+                    { icon: 'fas fa-users', text: 'Bergabung dengan komunitas atau program penurunan berat', color: 'from-indigo-400 to-indigo-600' }
+                ];
+            } else if (bmi >= 25) {
+                tips = [
+                    { icon: 'fas fa-balance-scale', text: 'Jaga keseimbangan kalori masuk dan keluar', color: 'from-yellow-400 to-yellow-600' },
+                    { icon: 'fas fa-walking', text: 'Tingkatkan aktivitas fisik harian secara bertahap', color: 'from-orange-400 to-orange-600' },
+                    { icon: 'fas fa-ban', text: 'Kurangi makanan olahan dan minuman manis', color: 'from-red-400 to-red-600' },
+                    { icon: 'fas fa-moon', text: 'Pastikan tidur berkualitas 7-9 jam per malam', color: 'from-purple-400 to-purple-600' }
+                ];
+            } else {
+                tips = [
+                    { icon: 'fas fa-heart', text: 'Pertahankan pola makan seimbang dan bervariasi', color: 'from-green-400 to-green-600' },
+                    { icon: 'fas fa-bicycle', text: 'Tetap aktif dengan olahraga yang Anda sukai', color: 'from-blue-400 to-blue-600' },
+                    { icon: 'fas fa-smile', text: 'Jaga kesehatan mental dengan aktivitas positif', color: 'from-pink-400 to-pink-600' },
+                    { icon: 'fas fa-stethoscope', text: 'Lakukan check-up kesehatan rutin', color: 'from-purple-400 to-purple-600' }
+                ];
+            }
+
+            tipsContainer.innerHTML = tips.map(tip => `
+                <div class="flex items-start space-x-3 p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/70 transition-all duration-300 hover:transform hover:scale-105">
+                    <div class="w-8 h-8 bg-gradient-to-br ${tip.color} rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="${tip.icon} text-white text-sm"></i>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">${tip.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // Health Tips Based on Prediction Result
+        function showHealthTipsBasedOnPrediction(prediction) {
+            const personalizedHealthTips = document.getElementById('personalizedHealthTips');
+            const personalizedTipsContainer = document.getElementById('personalizedTipsContainer');
+            const personalizedTipsIcon = document.getElementById('personalizedTipsIcon');
+            
+            // Clear previous tips
+            personalizedTipsContainer.innerHTML = '';
+            
+            // Define tips based on prediction
+            let tips = [];
+            let iconGradient = 'from-purple-400 to-purple-600';
+            
+            // Convert prediction to lowercase for easier matching
+            const predictionLower = prediction.toLowerCase();
+            
+            if (predictionLower.includes('obesity') || predictionLower.includes('obesitas')) {
+                iconGradient = 'from-red-400 to-red-600';
+                tips = [
+                    { icon: 'fas fa-utensils', text: 'Kurangi porsi makan dan batasi makanan tinggi kalori' },
+                    { icon: 'fas fa-running', text: 'Mulai dengan jalan kaki 15-30 menit setiap hari' },
+                    { icon: 'fas fa-user-md', text: 'Konsultasi rutin dengan dokter untuk monitoring kesehatan' },
+                    { icon: 'fas fa-glass-water', text: 'Minum air putih 8-10 gelas per hari' },
+                    { icon: 'fas fa-brain', text: 'Kelola stres dengan meditasi atau yoga' }
+                ];
+            } else if (predictionLower.includes('overweight') || predictionLower.includes('gemuk')) {
+                iconGradient = 'from-yellow-400 to-yellow-600';
+                tips = [
+                    { icon: 'fas fa-balance-scale', text: 'Kurangi 300-500 kalori per hari secara bertahap' },
+                    { icon: 'fas fa-carrot', text: 'Pilih makanan dengan indeks glikemik rendah' },
+                    { icon: 'fas fa-dumbbell', text: 'Kombinasikan kardio dengan latihan kekuatan' },
+                    { icon: 'fas fa-moon', text: 'Pastikan tidur 7-8 jam setiap malam' },
+                    { icon: 'fas fa-book', text: 'Catat makanan harian untuk meningkatkan kesadaran' }
+                ];
+            } else if (predictionLower.includes('normal')) {
+                iconGradient = 'from-green-400 to-green-600';
+                tips = [
+                    { icon: 'fas fa-heart', text: 'Pertahankan pola makan seimbang yang sudah baik' },
+                    { icon: 'fas fa-apple-alt', text: 'Konsumsi makanan dari semua kelompok nutrisi' },
+                    { icon: 'fas fa-bicycle', text: 'Lakukan 150 menit aktivitas fisik per minggu' },
+                    { icon: 'fas fa-stethoscope', text: 'Check-up kesehatan rutin setahun sekali' },
+                    { icon: 'fas fa-smile', text: 'Jaga keseimbangan hidup dan kelola stres' }
+                ];
+            } else if (predictionLower.includes('insufficient') || predictionLower.includes('underweight') || predictionLower.includes('kurus')) {
+                iconGradient = 'from-blue-400 to-blue-600';
+                tips = [
+                    { icon: 'fas fa-hamburger', text: 'Konsumsi makanan padat nutrisi dan tinggi kalori' },
+                    { icon: 'fas fa-drumstick-bite', text: 'Pastikan asupan protein 1.6-2.2g per kg berat badan' },
+                    { icon: 'fas fa-dumbbell', text: 'Fokus pada latihan kekuatan untuk massa otot' },
+                    { icon: 'fas fa-clock', text: 'Makan 5-6 kali dalam porsi kecil sepanjang hari' },
+                    { icon: 'fas fa-blender', text: 'Konsumsi smoothies tinggi kalori sebagai camilan' }
+                ];
+            }
+            
+            // Update icon gradient
+            personalizedTipsIcon.className = `w-10 h-10 bg-gradient-to-br ${iconGradient} rounded-xl flex items-center justify-center mr-3`;
+            
+            // Display tips in sidebar format
+            if (tips.length > 0) {
+                personalizedTipsContainer.innerHTML = tips.map(tip => `
+                    <div class="flex items-start space-x-3 p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/70 transition-all duration-300">
+                        <div class="w-8 h-8 bg-gradient-to-br ${iconGradient} rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="${tip.icon} text-white text-sm"></i>
+                        </div>
+                        <p class="text-sm text-gray-700 leading-relaxed">${tip.text}</p>
+                    </div>
+                `).join('');
+                
+                // Show the personalized tips section
+                personalizedHealthTips.style.opacity = '1';
+            }
+        }
+
+        function showPredictionResult(prediction) {
+            const resultDiv = document.getElementById('predictionResult');
+            const predictionText = document.getElementById('predictionText');
+            const errorDiv = document.getElementById('errorMessage');
+            
+            // Hide error message if visible
+            errorDiv.classList.add('hidden');
+            
+            // Show result
+            predictionText.textContent = prediction;
+            resultDiv.classList.remove('hidden');
+            
+            // Add animation
+            resultDiv.classList.add('animate-slide-up');
+            
+            // Show health tips based on prediction
+            showHealthTipsBasedOnPrediction(prediction);
+        }
+
+        function showErrorMessage(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const resultDiv = document.getElementById('predictionResult');
+            const personalizedHealthTips = document.getElementById('personalizedHealthTips');
+            
+            // Hide result if visible
+            resultDiv.classList.add('hidden');
+            personalizedHealthTips.style.opacity = '0';
+            
+            // Show error
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            // Add animation
+            errorDiv.classList.add('animate-shake');
+        }
+
+        // AJAX Form Submission Function
+        async function submitPredictionForm(formData) {
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    // Handle JSON response
+                    const result = await response.json();
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    return result.prediction;
+                } else {
+                    // Handle HTML response (fallback)
+                    const result = await response.text();
+                    
+                    // Try to extract prediction from HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(result, 'text/html');
+                    
+                    // Look for prediction in various ways
+                    const predictionPatterns = [
+                        /Obesity Type \w+/i,
+                        /Normal Weight/i,
+                        /Overweight Level \w+/i,
+                        /Insufficient Weight/i,
+                        /obesity_type\d+/i,
+                        /normal_weight/i,
+                        /overweight_level_\w+/i,
+                        /insufficient_weight/i
+                    ];
+                    
+                    const bodyText = doc.body.textContent || doc.body.innerText || '';
+                    
+                    for (const pattern of predictionPatterns) {
+                        const match = bodyText.match(pattern);
+                        if (match) {
+                            return match[0];
+                        }
+                    }
+                    
+                    // If no pattern matches, return a generic message
+                    return "Prediksi berhasil diproses";
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
+        }
+
+        // BMI History Management
+        function saveBMIHistory(bmi, category) {
+            if (!bmi) return;
+            
+            const history = JSON.parse(localStorage.getItem('bmiHistory') || '[]');
+            const now = new Date();
+            const entry = {
+                date: now.toLocaleDateString('id-ID'),
+                time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                bmi: bmi.toFixed(1),
+                category: category
+            };
+            
+            history.unshift(entry);
+            if (history.length > 10) history.pop();
+            
+            localStorage.setItem('bmiHistory', JSON.stringify(history));
+            displayBMIHistory();
+            updateChart();
+        }
+
+        function displayBMIHistory() {
+            const history = JSON.parse(localStorage.getItem('bmiHistory') || '[]');
+            const container = document.getElementById('bmiHistory');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 text-sm py-8">Belum ada riwayat BMI</div>';
+                return;
+            }
+            
+            container.innerHTML = history.map(entry => {
+                const { color, bgColor } = getBMICategory(parseFloat(entry.bmi));
+                return `
+                    <div class="flex items-center justify-between p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/70 transition-all duration-300">
+                        <div>
+                            <div class="font-semibold ${color}">${entry.bmi}</div>
+                            <div class="text-xs text-gray-500">${entry.date} ${entry.time}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs ${color} font-medium">${entry.category}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat BMI?')) {
+                localStorage.removeItem('bmiHistory');
+                displayBMIHistory();
+                updateChart();
+            }
+        }
+
+        // Chart Management
+        let bmiChart;
+
+        function initChart() {
+            const ctx = document.getElementById('bmiChart').getContext('2d');
+            bmiChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'BMI',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 15,
+                            max: 40,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const history = JSON.parse(localStorage.getItem('bmiHistory') || '[]');
+            const labels = history.reverse().map(entry => entry.date);
+            const data = history.map(entry => parseFloat(entry.bmi));
+            
+            bmiChart.data.labels = labels;
+            bmiChart.data.datasets[0].data = data;
+            bmiChart.update();
+        }
+
+        // Real-time BMI calculation
+        function updateRealTimeBMI() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            
+            const bmi = calculateBMI(weight, height);
+            
+            updateBMIDisplay(bmi);
+            updateIdealWeight(height);
+            updateHealthTips(bmi);
+            
+            if (bmi && weight && height) {
+                const { category } = getBMICategory(bmi);
+                saveBMIHistory(bmi, category);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('weight').addEventListener('input', updateRealTimeBMI);
+        document.getElementById('height').addEventListener('input', updateRealTimeBMI);
+
+        // AJAX Form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            // Show loading state
+            submitText.style.display = 'none';
+            loadingSpinner.classList.remove('hidden');
+            submitBtn.disabled = true;
+            
+            try {
+                // Create FormData from form
+                const formData = new FormData(this);
+                
+                // Submit form via AJAX
+                const prediction = await submitPredictionForm(formData);
+                
+                // Show result
+                showPredictionResult(prediction);
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showErrorMessage('Terjadi kesalahan saat melakukan prediksi. Silakan coba lagi.');
+            } finally {
+                // Reset button state
+                submitText.style.display = 'inline';
+                loadingSpinner.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            displayBMIHistory();
+            initChart();
+            updateChart();
+            updateHealthTips();
+            
+            // Add entrance animations
+            setTimeout(() => {
+                document.querySelectorAll('.animate-scale-in').forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'scale(1)';
+                    }, index * 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
