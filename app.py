@@ -7,9 +7,9 @@ app = Flask(__name__)
 
 # --- Daftar semua model yang tersedia ---
 MODEL_FILES = {
-    'SVM': 'obesity_classifier_simple_svm.pkl',
-    'KNN': 'obesity_classifier_simple_knn.pkl',
-    'RandomForest': 'obesity_classifier_simple_randomforest.pkl'
+    'SVM': 'models/obesity_classifier_simple_svm.pkl',
+    'KNN': 'models/obesity_classifier_simple_knn.pkl',
+    'RandomForest': 'models/obesity_classifier_simple_randomforest.pkl'
 }
 
 # Pre-load models to avoid loading on every request (untuk performa)
