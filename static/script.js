@@ -163,6 +163,7 @@ function showHealthTips(prediction) {
 }
 
 function showPredictionResult(prediction, probabilities) {
+    
     const resultsSection = document.getElementById('resultsSection');
     const predictionText = document.getElementById('predictionText');
     const probabilitySection = document.getElementById('probabilitySection');
